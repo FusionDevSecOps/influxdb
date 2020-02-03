@@ -24,6 +24,7 @@ type Compiler struct {
 	Cluster string     `json:"cluster,omitempty"`
 	DB      string     `json:"db,omitempty"`
 	RP      string     `json:"rp,omitempty"`
+	Bucket  string     `json:"bucket,omitempty"`
 	Query   string     `json:"query"`
 	Now     *time.Time `json:"now,omitempty"`
 

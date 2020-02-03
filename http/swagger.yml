@@ -6294,6 +6294,9 @@ components:
         cluster:
           description: Required for `influxql` type queries.
           type: string
+        bucket:
+          description: Required for `influxql` type queries. Bucket is to be used instead of the database and retention policy specified in the InfluxQL query.
+          type: string
         dialect:
           $ref: "#/components/schemas/Dialect"
     Package:

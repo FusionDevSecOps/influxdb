@@ -23,6 +23,7 @@ import (
 	"github.com/influxdata/influxdb"
 	"github.com/influxdata/influxdb/jsonweb"
 	"github.com/influxdata/influxdb/query"
+	transpiler "github.com/influxdata/influxdb/query/influxql"
 	"github.com/influxdata/influxql"
 )
 
@@ -34,6 +35,7 @@ type QueryRequest struct {
 	Query   string       `json:"query"`
 	Type    string       `json:"type"`
 	Dialect QueryDialect `json:"dialect"`
+	Bucket  string       `json:"bucket"`
 
 	Org *influxdb.Organization `json:"-"`
 
@@ -97,7 +99,7 @@ func (r QueryRequest) Validate() error {
 		}
 	}
 
-	if r.Type != "flux" {
+	if r.Type != "flux" && r.Type != "influxql" {
 		return fmt.Errorf(`unknown query type: %s`, r.Type)
 	}
 
@@ -245,10 +247,22 @@ func (r QueryRequest) proxyRequest(now func() time.Time) (*query.ProxyRequest, e
 	// Query is preferred over AST
 	var compiler flux.Compiler
 	if r.Query != "" {
-		compiler = lang.FluxCompiler{
-			Now:    now(),
-			Extern: r.Extern,
-			Query:  r.Query,
+		switch r.Type {
+		case "influxql":
+			n := now()
+			compiler = &transpiler.Compiler{
+				Now:    &n,
+				Query:  r.Query,
+				Bucket: r.Bucket,
+			}
+		case "flux":
+			fallthrough
+		default:
+			compiler = lang.FluxCompiler{
+				Now:    now(),
+				Extern: r.Extern,
+				Query:  r.Query,
+			}
 		}
 	} else if r.AST != nil {
 		c := lang.ASTCompiler{
